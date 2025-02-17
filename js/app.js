@@ -20,7 +20,7 @@ document.getElementById('notificacionForm').addEventListener('submit', async (e)
 
     try {
         // Enviar notificación al backend
-        const response = await axios.post('http://localhost:3000/notificaciones', {
+        const response = await axios.post('https://proyecto-notificaciones.onrender.com/notificaciones', {
             fecha,
             numero,
             folio,
@@ -64,7 +64,7 @@ let dataTable;
 // Función para cargar notificaciones
 async function cargarNotificaciones() {
     try {
-        const response = await axios.get('http://localhost:3000/notificaciones');
+        const response = await axios.get('https://proyecto-notificaciones.onrender.com/notificaciones');
 
         // Formatear los datos
         const datosFormateados = response.data.map(notificacion => {
@@ -129,7 +129,7 @@ async function eliminarNotificacion(id) {
     if (!confirm('¿Estás seguro de eliminar esta notificación?')) return;
 
     try {
-        await axios.delete(`http://localhost:3000/notificaciones/${id}`);
+        await axios.delete(`https://proyecto-notificaciones.onrender.com/notificaciones/${id}`);
         alert('Notificación eliminada con éxito');
         location.reload();
     } catch (err) {
@@ -140,7 +140,7 @@ async function eliminarNotificacion(id) {
 
 async function actualizarNotificacion(id) {
     try {
-        const response = await fetch(`http://localhost:3000/notificaciones/${id}`, {
+        const response = await fetch(`https://proyecto-notificaciones.onrender.com/notificaciones/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
