@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Notificaciones e Inspecciones</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=TU_API_KEY_GOOGLE_MAPS&libraries=places"></script>
+    <script src="./js/maps.js" defer></script>
+    <script src="./js/app.js" defer></script>
+    <link rel="stylesheet" href="./css/styles.css">
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background-color: #343a40;
+            color: white;
+            width: 250px;
+            height: 100%;
+            position: fixed;
+            padding-top: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h3 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 40px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #ccc;
+            padding: 15px;
+            text-decoration: none;
+            font-size: 16px;
+            border-bottom: 1px solid #444;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .content {
+            margin-left: 150px;
+            padding: 20px;
+            width: 100%;
+            overflow-y: auto;
+        }
+
+        /* Estilos de los botones y tablas */
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .btn {
+            border-radius: 25px;
+        }
+
+        .table {
+            border-radius: 8px;
+        }
+
+        /* Animación de transiciones */
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .content {
+                margin-left: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h3>Menú Principal:</h3>
+        <a href="index.html" class="fade-in">Notificaciones e Inspecciones</a>
+        <a href="login.html" class="fade-in">Salir</a>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="content">
+        <div class="container mt-5">
+            <h1 class="text-center mb-4"> Gestión de Notificaciones e Inspecciones </h1>
+
+            <!-- Formulario para agregar notificaciones -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="text-center">Agregar Notificación</h4>
+            </div>
+            <div class="card-body">
+                <form id="notificacionForm">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="fecha" class="form-label">Fecha</label>
+                            <input type="date" class="form-control" id="fecha" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="numero" class="form-label">Número de Notificación</label>
+                            <select class="form-control" id="numero" required>
+                                <option value="" disabled selected>Selecciona una opción</option>
+                                <option value="1ra notificación">1RA</option>
+                                <option value="2da notificación">2DA</option>
+                                <option value="3ra notificación">3RA</option>
+                                <option value="Inspección">Inspección</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="folio" class="form-label">Folio</label>
+                            <input type="text" class="form-control" id="folio" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="nombre" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="nombre" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ubicacion" class="form-label">Ubicación</label>
+                            <input type="text" class="form-control" id="ubicacion" placeholder="Busca una ubicación" required>
+                        </div>
+                        <div class="col-md-12 mt-3">
+                            <div id="map" style="height: 400px;"></div>
+                        </div>                                                
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="comunidad" class="form-label">Comunidad</label>
+                            <select class="form-control" id="comunidad">
+                                <option value="" selected disabled>Selecciona una comunidad</option>
+                                <option value="ACAZUCHITLÁN">ACAZUCHITLÁN</option>
+                                <option value="AGUA ESCONDIDA">AGUA ESCONDIDA</option>
+                                <option value="ALDAMA">ALDAMA</option>
+                                <option value="BUENAVISTA">BUENAVISTA</option>
+                                <option value="CALPULALPAN">CALPULALPAN</option>
+                                <option value="COLONIA EMILIANO ZAPATA">COLONIA EMILIANO ZAPATA</option>
+                                <option value="COSCOMATE DEL PROGRESO">COSCOMATE DEL PROGRESO</option>
+                                <option value="DANXHO">DANXHO</option>
+                                <option value="DEDENI DOLORES">DEDENI DOLORES</option>
+                                <option value="DENJHI">DENJHI</option>
+                                <option value="DEXCANÍ ALTO">DEXCANÍ ALTO</option>
+                                <option value="DEXCANÍ BAJO">DEXCANÍ BAJO</option>
+                                <option value="DOXHICHO">DOXHICHO</option>
+                                <option value="EJIDO DE COSCOMATE">EJIDO DE COSCOMATE</option>
+                                <option value="EJIDO DE JILOTEPEC">EJIDO DE JILOTEPEC</option>
+                                <option value="EJIDO DE SAN LORENZO OCTEYUCO">EJIDO DE SAN LORENZO OCTEYUCO</option>
+                                <option value="EL DENI">EL DENI</option>
+                                <option value="EL DURAZNO DE CUAUHTÉMOC">EL DURAZNO DE CUAUHTÉMOC</option>
+                                <option value="EL DURAZNO DE GUERRERO">EL DURAZNO DE GUERRERO</option>
+                                <option value="EL FRESNO">EL FRESNO</option>
+                                <option value="EL MAGUEYAL">EL MAGUEYAL</option>
+                                <option value="EL MAJUAY">EL MAJUAY</option>
+                                <option value="EL RINCÓN">EL RINCÓN</option>
+                                <option value="EL ROSAL">EL ROSAL</option>
+                                <option value="EL SALTILLO">EL SALTILLO</option>
+                                <option value="EL XHITEY">EL XHITEY</option>
+                                <option value="JILOTEPEC DE MOLINA ENRÍQUEZ">JILOTEPEC DE MOLINA ENRÍQUEZ</option>
+                                <option value="LA COMUNIDAD">LA COMUNIDAD</option>
+                                <option value="LA CRUZ DE DENDHO">LA CRUZ DE DENDHO</option>
+                                <option value="LA HUARACHA">LA HUARACHA</option>
+                                <option value="LA MAQUEDA">LA MAQUEDA</option>
+                                <option value="LA MERCED">LA MERCED</option>
+                                <option value="LAS HUERTAS">LAS HUERTAS</option>
+                                <option value="LAS MANZANAS">LAS MANZANAS</option>
+                                <option value="LLANO GRANDE">LLANO GRANDE</option>
+                                <option value="MAGUEYCITOS">MAGUEYCITOS</option>
+                                <option value="MATAXHI">MATAXHI</option>
+                                <option value="MEXICALTONGO">MEXICALTONGO</option>
+                                <option value="OCTEYUCO 2000">OCTEYUCO 2000</option>
+                                <option value="OJO DE AGUA">OJO DE AGUA</option>
+                                <option value="JAVIER BARRIOS">JAVIER BARRIOS</option>
+                                <option value="SAN IGNACIO DE LOYOLA">SAN IGNACIO DE LOYOLA</option>
+                                <option value="SAN JOSÉ OCTEYUCO">SAN JOSÉ OCTEYUCO</option>
+                                <option value="SAN LORENZO NENAMICOYAN">SAN LORENZO NENAMICOYAN</option>
+                                <option value="SAN LORENZO OCTEYUCO">SAN LORENZO OCTEYUCO</option>
+                                <option value="SAN MARTÍN TUCHICUITLAPILCO">SAN MARTÍN TUCHICUITLAPILCO</option>
+                                <option value="SAN MIGUEL DE LA VICTORIA">SAN MIGUEL DE LA VICTORIA</option>
+                                <option value="SAN PABLO HUANTEPEC">SAN PABLO HUANTEPEC</option>
+                                <option value="SAN SEBASTIÁN DE JUÁREZ">SAN SEBASTIÁN DE JUÁREZ</option>
+                                <option value="SANTA MARTHA DE LA CRUZ">SANTA MARTHA DE LA CRUZ</option>
+                                <option value="SANTIAGO OXTHOC">SANTIAGO OXTHOC</option>
+                                <option value="TECOLAPAN">TECOLAPAN</option>
+                                <option value="TEUPAN">TEUPAN</option>
+                                <option value="VILLA DE CANALEJAS">VILLA DE CANALEJAS</option>
+                                <option value="XHIMOJAY">XHIMOJAY</option>
+                                <option value="XHISDA">XHISDA</option>
+                                <option value="XHIXHATA">XHIXHATA</option>
+                            </select>
+                        </div>                        
+                        <div class="col-md-4">
+                            <label for="referencia" class="form-label">Referencia</label>
+                            <input type="text" class="form-control" id="referencia">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="niveles" class="form-label">No de Niveles</label>
+                            <input type="number" class="form-control" id="niveles">
+                        </div>                         
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="sup_aproximada" class="form-label">Superficie Aproximada (m²)</label>
+                            <input type="number" class="form-control" id="sup_aproximada" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <label class="form-label">Características de la Construcción</label>
+                            <div>
+                                <input type="checkbox" id="obra_nueva" value="OBRA NUEVA"> <label for="obra_nueva">OBRA NUEVA</label><br>
+                                <input type="checkbox" id="habitacional" value="HABITACIONAL"> <label for="habitacional">HABITACIONAL</label><br>
+                                <input type="checkbox" id="ampliacion" value="AMPLIACIÓN DE CONSTRUCCIÓN"> <label for="ampliacion">AMPLIACIÓN DE CONSTRUCCIÓN</label><br>
+                                <input type="checkbox" id="industrial" value="INDUSTRIAL"> <label for="industrial">INDUSTRIAL</label><br>
+                                <input type="checkbox" id="fuera_alineamiento" value="OBRA FUERA DE ALINEAMIENTO"> <label for="fuera_alineamiento">OBRA FUERA DE ALINEAMIENTO</label><br>
+                                <input type="checkbox" id="comercial" value="COMERCIAL"> <label for="comercial">COMERCIAL</label><br>
+                                <input type="checkbox" id="barda_perimetral" value="BARDA PERIMETRAL"> <label for="barda_perimetral">BARDA PERIMETRAL</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Agregar Notificación</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Filtro por Comunidad -->
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label for="filtroComunidad" class="form-label">Filtrar por Comunidad</label>
+        <select class="form-control" id="filtroComunidad" onchange="filtrarTabla()">
+            <option value="">Todas las comunidades</option>
+            <option value="ACAZUCHITLÁN">ACAZUCHITLÁN</option>
+            <option value="AGUA ESCONDIDA">AGUA ESCONDIDA</option>
+            <option value="ALDAMA">ALDAMA</option>
+            <option value="BUENAVISTA">BUENAVISTA</option>
+            <option value="CALPULALPAN">CALPULALPAN</option>
+            <option value="COLONIA EMILIANO ZAPATA">COLONIA EMILIANO ZAPATA</option>
+            <option value="COSCOMATE DEL PROGRESO">COSCOMATE DEL PROGRESO</option>
+            <option value="DANXHO">DANXHO</option>
+            <option value="DEDENI DOLORES">DEDENI DOLORES</option>
+            <option value="DENJHI">DENJHI</option>
+            <option value="DEXCANÍ ALTO">DEXCANÍ ALTO</option>
+            <option value="DEXCANÍ BAJO">DEXCANÍ BAJO</option>
+            <option value="DOXHICHO">DOXHICHO</option>
+            <option value="EJIDO DE COSCOMATE">EJIDO DE COSCOMATE</option>
+            <option value="EJIDO DE JILOTEPEC">EJIDO DE JILOTEPEC</option>
+            <option value="EJIDO DE SAN LORENZO OCTEYUCO">EJIDO DE SAN LORENZO OCTEYUCO</option>
+            <option value="EL DENI">EL DENI</option>
+            <option value="EL DURAZNO DE CUAUHTÉMOC">EL DURAZNO DE CUAUHTÉMOC</option>
+            <option value="EL DURAZNO DE GUERRERO">EL DURAZNO DE GUERRERO</option>
+            <option value="EL FRESNO">EL FRESNO</option>
+            <option value="EL MAGUEYAL">EL MAGUEYAL</option>
+            <option value="EL MAJUAY">EL MAJUAY</option>
+            <option value="EL RINCÓN">EL RINCÓN</option>
+            <option value="EL ROSAL">EL ROSAL</option>
+            <option value="EL SALTILLO">EL SALTILLO</option>
+            <option value="EL XHITEY">EL XHITEY</option>
+            <option value="JILOTEPEC DE MOLINA ENRÍQUEZ">JILOTEPEC DE MOLINA ENRÍQUEZ</option>
+            <option value="LA COMUNIDAD">LA COMUNIDAD</option>
+            <option value="LA CRUZ DE DENDHO">LA CRUZ DE DENDHO</option>
+            <option value="LA HUARACHA">LA HUARACHA</option>
+            <option value="LA MAQUEDA">LA MAQUEDA</option>
+            <option value="LA MERCED">LA MERCED</option>
+            <option value="LAS HUERTAS">LAS HUERTAS</option>
+            <option value="LAS MANZANAS">LAS MANZANAS</option>
+            <option value="LLANO GRANDE">LLANO GRANDE</option>
+            <option value="MAGUEYCITOS">MAGUEYCITOS</option>
+            <option value="MATAXHI">MATAXHI</option>
+            <option value="MEXICALTONGO">MEXICALTONGO</option>
+            <option value="OCTEYUCO 2000">OCTEYUCO 2000</option>
+            <option value="OJO DE AGUA">OJO DE AGUA</option>
+            <option value="JAVIER BARRIOS">JAVIER BARRIOS</option>
+            <option value="SAN IGNACIO DE LOYOLA">SAN IGNACIO DE LOYOLA</option>
+            <option value="SAN JOSÉ OCTEYUCO">SAN JOSÉ OCTEYUCO</option>
+            <option value="SAN LORENZO NENAMICOYAN">SAN LORENZO NENAMICOYAN</option>
+            <option value="SAN LORENZO OCTEYUCO">SAN LORENZO OCTEYUCO</option>
+            <option value="SAN MARTÍN TUCHICUITLAPILCO">SAN MARTÍN TUCHICUITLAPILCO</option>
+            <option value="SAN MIGUEL DE LA VICTORIA">SAN MIGUEL DE LA VICTORIA</option>
+            <option value="SAN PABLO HUANTEPEC">SAN PABLO HUANTEPEC</option>
+            <option value="SAN SEBASTIÁN DE JUÁREZ">SAN SEBASTIÁN DE JUÁREZ</option>
+            <option value="SANTA MARTHA DE LA CRUZ">SANTA MARTHA DE LA CRUZ</option>
+            <option value="SANTIAGO OXTHOC">SANTIAGO OXTHOC</option>
+            <option value="TECOLAPAN">TECOLAPAN</option>
+            <option value="TEUPAN">TEUPAN</option>
+            <option value="VILLA DE CANALEJAS">VILLA DE CANALEJAS</option>
+            <option value="XHIMOJAY">XHIMOJAY</option>
+            <option value="XHISDA">XHISDA</option>
+            <option value="XHIXHATA">XHIXHATA</option>
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label for="filtroNotificacion" class="form-label">Filtrar por Número de Notificación</label>
+        <select class="form-control" id="filtroNotificacion" onchange="filtrarTabla()">
+            <option value="">Todas las notificaciones</option>
+            <option value="1">1RA</option>
+            <option value="2">2DA</option>
+            <option value="3">3RA</option>
+        </select>
+    </div>
+</div>
+
+<div class="container mt-3">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="text-center">Lista de Notificaciones e Inspecciones</h4>
+        </div>
+        <div class="card-body">
+            <table id="notificacionesTable" class="table table-striped table-bordered text-center align-middle">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Número de Notificación</th>
+                        <th>Folio</th>
+                        <th>Nombre</th>
+                        <th>Ubicación</th>
+                        <th>Comunidad</th>
+                        <th>Referencia</th>
+                        <th>Niveles</th>
+                        <th>Superficie aprox (m²)</th>
+                        <th>Características</th>
+                        <th>Estado</th>
+                        <th>Actualizar</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Hacer los botones más pequeños */
+    .table td button {
+        font-size: 0.9  rem;
+        padding: 5px 10px;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    /* Controlar el tamaño de la tabla */
+    .table {
+        width: auto;
+    }
+
+    /* Asegurarse de que las celdas no se expandan innecesariamente */
+    .table td {
+        word-wrap: break-word;
+        max-width: 150px;
+    }
+</style>
+
+<!-- Scripts de Bootstrap, jQuery y DataTables -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+
+<script>
+    function filtrarTabla() {
+    const filtroComunidad = document.getElementById("filtroComunidad").value.toUpperCase();
+    const filtroNotificacion = document.getElementById("filtroNotificacion").value.trim();
+
+    const filas = document.querySelectorAll("#notificacionesTable tr");
+
+    filas.forEach(fila => {
+        const comunidad = fila.children[5].textContent.toUpperCase();
+        const notificacion = fila.children[1].textContent.trim();
+
+        let mostrar = true;
+
+        // Verifica si hay algún filtro activo y si coincide
+        if (filtroComunidad && comunidad !== filtroComunidad) {
+            mostrar = false;
+        }
+        if (filtroNotificacion && !notificacion.includes(filtroNotificacion)) {
+            mostrar = false;
+        }
+
+        // Mostrar la fila si al menos un criterio coincide
+        if (
+            (!filtroComunidad || comunidad === filtroComunidad) &&
+            (!filtroNotificacion || notificacion.includes(filtroNotificacion))
+        ) {
+            mostrar = true;
+        }
+
+        fila.style.display = mostrar ? "" : "none";
+    });
+}
+</script>
+
+    </div>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATseXRXJunPtS9HPA9RtoKSLbHJpRXqR8&callback=initMap" async defer></script>
+</body>
+</html>
