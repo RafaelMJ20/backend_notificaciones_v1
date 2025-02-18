@@ -6,11 +6,26 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
     try {
         const response = await axios.post('https://proyecto-notificaciones.onrender.com/login', { email, password });
-        alert('Inicio de sesión exitoso');
-        // Redireccionar a la página principal
-        window.location.href = 'principal.html';
+
+        // SweetAlert de éxito
+        Swal.fire({
+            title: '¡Inicio de sesión exitoso!',
+            text: 'Bienvenido a la plataforma',
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+        }).then(() => {
+            // Redirigir después de que el usuario cierre la alerta
+            window.location.href = 'principal.html';
+        });
+
     } catch (err) {
-        alert('Credenciales incorrectas');
+        // SweetAlert de error
+        Swal.fire({
+            title: 'Error',
+            text: 'Credenciales incorrectas. Inténtalo de nuevo.',
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+        });
         console.error(err);
     }
 });
