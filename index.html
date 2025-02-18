@@ -340,9 +340,10 @@
         <label for="filtroNotificacion" class="form-label">Filtrar por Número de Notificación</label>
         <select class="form-control" id="filtroNotificacion" onchange="filtrarTabla()">
             <option value="">Todas las notificaciones</option>
-            <option value="1">1RA</option>
-            <option value="2">2DA</option>
-            <option value="3">3RA</option>
+            <option value="1ra notificación">1RA</option>
+            <option value="2da notificación">2DA</option>
+            <option value="3ra notificación">3RA</option>
+            <option value="Inspección">Inspección</option>
         </select>
     </div>
 </div>
@@ -413,7 +414,7 @@
     const filtroComunidad = document.getElementById("filtroComunidad").value.toUpperCase();
     const filtroNotificacion = document.getElementById("filtroNotificacion").value.trim();
 
-    const filas = document.querySelectorAll("#notificacionesTable tr");
+    const filas = document.querySelectorAll("#notificacionesTable tbody tr");
 
     filas.forEach(fila => {
         const comunidad = fila.children[5].textContent.toUpperCase();
