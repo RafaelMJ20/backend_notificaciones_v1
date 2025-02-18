@@ -8,7 +8,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         const response = await axios.post('https://proyecto-notificaciones.onrender.com/login', { email, password });
         alert('Inicio de sesión exitoso');
         // Redireccionar a la página principal
-        window.location.href = 'index.html';
+        window.location.href = 'principal.html';
     } catch (err) {
         alert('Credenciales incorrectas');
         console.error(err);
