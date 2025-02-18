@@ -20,7 +20,7 @@ document.getElementById('notificacionForm').addEventListener('submit', async (e)
 
     try {
         // Enviar notificación al backend
-        const response = await axios.post('https://proyecto-notificaciones.onrender.com/notificaciones', {
+        const response = await axios.post('http://localhost:3000/notificaciones', {
             fecha,
             numero,
             folio,
@@ -33,29 +33,42 @@ document.getElementById('notificacionForm').addEventListener('submit', async (e)
             caracteristicas: caracteristicas.join(','),
         });
 
-        alert('Notificación creada con éxito');
+        // Mostrar alerta de éxito
+        Swal.fire({
+            title: "¡Notificación creada!",
+            text: "La notificación se ha registrado con éxito.",
+            icon: "success",
+            draggable: true
+        }).then(() => {
+            // Limpiar los campos del formulario
+            document.getElementById('notificacionForm').reset();
 
-        // Limpiar los campos del formulario
-        document.getElementById('notificacionForm').reset();
+            // Limpiar manualmente los campos que no se limpian con reset()
+            document.getElementById('ubicacion').value = ''; // Vaciar el campo de "Ubicación"
+            
+            // Limpiar los checkboxes
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach((checkbox) => {
+                checkbox.checked = false; // Desmarcar todos los checkboxes
+            });
 
-        // Limpiar manualmente los campos que no se limpian con reset()
-        document.getElementById('ubicacion').value = ''; // Vaciar el campo de "Ubicación"
-        
-        // Limpiar los checkboxes
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach((checkbox) => {
-            checkbox.checked = false; // Desmarcar todos los checkboxes
+            // Opcional: Si tienes un mapa con un marcador, también puedes restablecer la ubicación y el marcador a la ubicación inicial
+            const initialLocation = { lat: 19.9532, lng: -99.5375 }; // Coordenadas de Jilotepec de Molina Enriquez
+            marker.setPosition(initialLocation); // Restablecer el marcador
+            map.setCenter(initialLocation); // Restablecer el centro del mapa
+
+            location.reload(); // Recargar la página para actualizar la lista
         });
-
-        // Opcional: Si tienes un mapa con un marcador, también puedes restablecer la ubicación y el marcador a la ubicación inicial
-        const initialLocation = { lat: 19.9532, lng: -99.5375 }; // Coordenadas de Jilotepec de Molina Enriquez
-        marker.setPosition(initialLocation); // Restablecer el marcador
-        map.setCenter(initialLocation); // Restablecer el centro del mapa
-
-        location.reload(); // Recargar la página para actualizar la lista
     } catch (err) {
         console.error(err);
-        alert('Error al crear la notificación');
+        
+        // Mostrar alerta de error
+        Swal.fire({
+            title: "Error",
+            text: "Hubo un problema al crear la notificación.",
+            icon: "error",
+            draggable: true
+        });
     }
 });
 
@@ -126,21 +139,52 @@ async function cargarNotificaciones() {
 }
 
 async function eliminarNotificacion(id) {
-    if (!confirm('¿Estás seguro de eliminar esta notificación?')) return;
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: "btn btn-success",
+            cancelButton: "btn btn-danger"
+        },
+        buttonsStyling: false
+    });
 
-    try {
-        await axios.delete(`https://proyecto-notificaciones.onrender.com/notificaciones/${id}`);
-        alert('Notificación eliminada con éxito');
-        location.reload();
-    } catch (err) {
-        console.error(err);
-        alert('Error al eliminar la notificación');
+    const result = await swalWithBootstrapButtons.fire({
+        title: "¿Estás seguro?",
+        text: "¡No podrás revertir esto!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "No, cancelar",
+        reverseButtons: true
+    });
+
+    if (result.isConfirmed) {
+        try {
+            await axios.delete(`http://localhost:3000/notificaciones/${id}`);
+            swalWithBootstrapButtons.fire({
+                title: "Eliminado",
+                text: "La notificación ha sido eliminada.",
+                icon: "success"
+            }).then(() => location.reload());
+        } catch (err) {
+            console.error(err);
+            swalWithBootstrapButtons.fire({
+                title: "Error",
+                text: "Hubo un problema al eliminar la notificación.",
+                icon: "error"
+            });
+        }
+    } else if (result.dismiss === Swal.DismissReason.cancel) {
+        swalWithBootstrapButtons.fire({
+            title: "Cancelado",
+            text: "La notificación sigue intacta.",
+            icon: "error"
+        });
     }
 }
 
 async function actualizarNotificacion(id) {
     try {
-        const response = await fetch(`https://proyecto-notificaciones.onrender.com/notificaciones/${id}`, {
+        const response = await fetch(`http://localhost:3000/notificaciones/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -148,16 +192,32 @@ async function actualizarNotificacion(id) {
         });
 
         if (response.ok) {
-            alert('Notificación actualizada correctamente');
-            cargarNotificaciones(); // Recargar la tabla después de actualizar
+            Swal.fire({
+                title: "¡Notificación actualizada!",
+                text: "Los cambios se han guardado correctamente.",
+                icon: "success",
+                draggable: true
+            }).then(() => {
+                cargarNotificaciones(); // Recargar la tabla después de actualizar
+            });
         } else {
             const error = await response.json();
-            alert(`Error: ${error.error}`);
+            Swal.fire({
+                title: "Error",
+                text: error.error,
+                icon: "error",
+                draggable: true
+            });
         }
     } catch (error) {
         console.error('Error al actualizar la notificación:', error);
+        Swal.fire({
+            title: "Error",
+            text: "Hubo un problema al actualizar la notificación.",
+            icon: "error",
+            draggable: true
+        });
     }
 }
-
 
 cargarNotificaciones();
