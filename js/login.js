@@ -7,19 +7,19 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     try {
         const response = await axios.post('https://proyecto-notificaciones.onrender.com/login', { email, password });
 
-        // SweetAlert de éxito
+        // Guardar el estado de inicio de sesión en LocalStorage
+        localStorage.setItem('isLoggedIn', 'true'); // Puedes almacenar más datos si es necesario, como el email
+
         Swal.fire({
             title: '¡Inicio de sesión exitoso!',
             text: 'Bienvenido a la plataforma',
             icon: 'success',
             confirmButtonText: 'Aceptar'
         }).then(() => {
-            // Redirigir después de que el usuario cierre la alerta
-            window.location.href = 'principal.html';
+            window.location.href = 'principal.html';  // Redirigir a la página principal
         });
 
     } catch (err) {
-        // SweetAlert de error
         Swal.fire({
             title: 'Error',
             text: 'Credenciales incorrectas. Inténtalo de nuevo.',
