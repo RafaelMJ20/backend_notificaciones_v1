@@ -20,7 +20,7 @@ document.getElementById('notificacionForm').addEventListener('submit', async (e)
 
     try {
         // Enviar notificación al backend
-        const response = await axios.post('http://localhost:3000/notificaciones', {
+        const response = await axios.post('https://proyecto-notificaciones.onrender.com/notificaciones', {
             fecha,
             numero,
             folio,
@@ -159,7 +159,7 @@ async function eliminarNotificacion(id) {
 
     if (result.isConfirmed) {
         try {
-            await axios.delete(`http://localhost:3000/notificaciones/${id}`);
+            await axios.delete(`https://proyecto-notificaciones.onrender.com/notificaciones/${id}`);
             swalWithBootstrapButtons.fire({
                 title: "Eliminado",
                 text: "La notificación ha sido eliminada.",
@@ -184,7 +184,7 @@ async function eliminarNotificacion(id) {
 
 async function actualizarNotificacion(id) {
     try {
-        const response = await fetch(`http://localhost:3000/notificaciones/${id}`, {
+        const response = await fetch(`https://proyecto-notificaciones.onrender.com/notificaciones/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
