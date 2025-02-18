@@ -105,8 +105,28 @@
     <div class="sidebar">
         <h3>Menú Principal:</h3>
         <a href="index.html" class="fade-in">Notificaciones e Inspecciones</a>
-        <a href="login.html" class="fade-in">Salir</a>
+        <a href="login.html" class="fade-in" onclick="confirmarSalida(event)">Salir</a>
     </div>
+
+    <script>
+        function confirmarSalida(event) {
+            event.preventDefault(); // Evita la redirección inmediata
+            
+            Swal.fire({
+                title: "¿Estás seguro?",
+                text: "Se cerrará tu sesión.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Sí, salir",
+                cancelButtonText: "No, cancelar",
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = "login.html"; // Redirige si el usuario confirma
+                }
+            });
+        }
+    </script>
 
     <!-- Contenido Principal -->
     <div class="content">
