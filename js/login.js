@@ -5,7 +5,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const password = document.getElementById('password').value;
 
     try {
-        const response = await axios.post('http://localhost:3000/login', { email, password });
+        const response = await axios.post('https://frontend-notificaciones-v1.onrender.com/login', { email, password });
 
         const { email: userEmail, rol } = response.data;
 
