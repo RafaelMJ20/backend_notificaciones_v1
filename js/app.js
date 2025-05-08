@@ -1,7 +1,15 @@
 document.getElementById('notificacionForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // Obtener valores del formulario
+    const rol = localStorage.getItem('rol');
+    if (rol !== 'admin') {
+        return Swal.fire({
+            title: "Acceso denegado",
+            text: "Solo los administradores pueden crear notificaciones.",
+            icon: "error"
+        });
+    }
+
     const fecha = document.getElementById('fecha').value;
     const numero = document.getElementById('numero').value;
     const folio = document.getElementById('folio').value;
@@ -12,15 +20,13 @@ document.getElementById('notificacionForm').addEventListener('submit', async (e)
     const niveles = document.getElementById('niveles').value;
     const sup_aproximada = document.getElementById('sup_aproximada').value;
 
-    // Características
     const caracteristicas = [];
     document.querySelectorAll('input[type=checkbox]:checked').forEach((checkbox) => {
         caracteristicas.push(checkbox.value);
     });
 
     try {
-        // Enviar notificación al backend
-        const response = await axios.post('https://proyecto-notificaciones.onrender.com/notificaciones', {
+        const response = await axios.post('http://localhost:3000/notificaciones', {
             fecha,
             numero,
             folio,
@@ -31,59 +37,56 @@ document.getElementById('notificacionForm').addEventListener('submit', async (e)
             niveles,
             sup_aproximada,
             caracteristicas: caracteristicas.join(','),
+            rol
         });
 
-        // Mostrar alerta de éxito
         Swal.fire({
             title: "¡Notificación creada!",
             text: "La notificación se ha registrado con éxito.",
-            icon: "success",
-            draggable: true
+            icon: "success"
         }).then(() => {
-            // Limpiar los campos del formulario
             document.getElementById('notificacionForm').reset();
-
-            // Limpiar manualmente los campos que no se limpian con reset()
-            document.getElementById('ubicacion').value = ''; // Vaciar el campo de "Ubicación"
-            
-            // Limpiar los checkboxes
+            document.getElementById('ubicacion').value = '';
             const checkboxes = document.querySelectorAll('input[type="checkbox"]');
             checkboxes.forEach((checkbox) => {
-                checkbox.checked = false; // Desmarcar todos los checkboxes
+                checkbox.checked = false;
             });
 
-            // Opcional: Si tienes un mapa con un marcador, también puedes restablecer la ubicación y el marcador a la ubicación inicial
-            const initialLocation = { lat: 19.9532, lng: -99.5375 }; // Coordenadas de Jilotepec de Molina Enriquez
-            marker.setPosition(initialLocation); // Restablecer el marcador
-            map.setCenter(initialLocation); // Restablecer el centro del mapa
+            const initialLocation = { lat: 19.9532, lng: -99.5375 };
+            marker.setPosition(initialLocation);
+            map.setCenter(initialLocation);
 
-            location.reload(); // Recargar la página para actualizar la lista
+            location.reload();
         });
     } catch (err) {
         console.error(err);
-        
-        // Mostrar alerta de error
         Swal.fire({
             title: "Error",
             text: "Hubo un problema al crear la notificación.",
-            icon: "error",
-            draggable: true
+            icon: "error"
         });
     }
 });
 
 let dataTable;
 
-// Función para cargar notificaciones
 async function cargarNotificaciones() {
     try {
-        const response = await axios.get('https://proyecto-notificaciones.onrender.com/notificaciones');
+        const response = await axios.get('http://localhost:3000/notificaciones');
+        const rol = localStorage.getItem('rol');
 
-        // Formatear los datos
         const datosFormateados = response.data.map(notificacion => {
             const fechaLocal = new Date(notificacion.fecha);
             fechaLocal.setMinutes(fechaLocal.getMinutes() + fechaLocal.getTimezoneOffset());
             const fechaFormateada = fechaLocal.toLocaleDateString('es-ES');
+
+            const seguimientoBtn = `
+            <button class="btn btn-sm ${
+                notificacion.resuelta ? 'btn-success' : 'btn-warning text-dark'
+            }" onclick="cambiarSeguimiento(${notificacion.id})">
+                ${notificacion.resuelta ? 'Resuelta' : 'Pendiente'}
+            </button>`;
+
 
             return [
                 fechaFormateada,
@@ -97,27 +100,36 @@ async function cargarNotificaciones() {
                 notificacion.sup_aproximada,
                 notificacion.caracteristicas,
                 notificacion.estado,
-                notificacion.habilitado
-                    ? `<button class="btn btn-primary btn-sm" onclick="actualizarNotificacion(${notificacion.id})">Actualizar</button>`
-                    : '<span>No habilitado</span>',
-                `<button class="btn btn-danger btn-sm" onclick="eliminarNotificacion(${notificacion.id})">Eliminar</button>`
+                // Botón de seguimiento
+                notificacion.resuelta
+                    ? `<button class="btn btn-sm btn-success" disabled>Resuelta</button>`
+                    : `<button class="btn btn-sm btn-warning text-dark" onclick="cambiarSeguimiento(${notificacion.id})">Pendiente</button>`,
+                // Botón de actualización, solo si no está resuelta y el rol es admin
+                notificacion.resuelta
+                    ? '<span>Resuelta</span>'
+                    : (rol === 'admin'
+                        ? `<button class="btn btn-primary btn-sm" onclick="actualizarNotificacion(${notificacion.id})">Actualizar</button>`
+                        : '<span>No autorizado</span>'),
+                // Botón de eliminación, solo si el rol es admin
+                rol === 'admin'
+                    ? `<button class="btn btn-danger btn-sm" onclick="eliminarNotificacion(${notificacion.id})">Eliminar</button>`
+                    : '<span>No autorizado</span>'
             ];
+            
         });
 
-        // Si DataTable ya está inicializado, limpiar los datos antes de recargar
         if (dataTable) {
             dataTable.clear();
             dataTable.rows.add(datosFormateados).draw();
         } else {
-            // Inicializar DataTable si no se ha creado aún
             dataTable = $('#notificacionesTable').DataTable({
                 data: datosFormateados,
-                paging: true,         // Habilita la paginación
-                pageLength: 10,       // Muestra 10 registros por página
-                lengthChange: false,  // Oculta la opción de cambiar número de registros
-                ordering: true,       // Permite ordenar columnas
-                info: true,           // Muestra información de la tabla
-                autoWidth: false,     // Ajusta automáticamente el ancho de las columnas
+                paging: true,
+                pageLength: 10,
+                lengthChange: false,
+                ordering: true,
+                info: true,
+                autoWidth: false,
                 searching: false,
                 responsive: true,
                 language: {
@@ -139,6 +151,15 @@ async function cargarNotificaciones() {
 }
 
 async function eliminarNotificacion(id) {
+    const rol = localStorage.getItem('rol');
+    if (rol !== 'admin') {
+        return Swal.fire({
+            title: "Acceso denegado",
+            text: "No tienes permiso para eliminar notificaciones.",
+            icon: "error"
+        });
+    }
+
     const swalWithBootstrapButtons = Swal.mixin({
         customClass: {
             confirmButton: "btn btn-success",
@@ -159,7 +180,10 @@ async function eliminarNotificacion(id) {
 
     if (result.isConfirmed) {
         try {
-            await axios.delete(`https://proyecto-notificaciones.onrender.com/notificaciones/${id}`);
+            await axios.delete(`http://localhost:3000/notificaciones/${id}`, {
+                data: { rol }
+            });
+
             swalWithBootstrapButtons.fire({
                 title: "Eliminado",
                 text: "La notificación ha sido eliminada.",
@@ -183,30 +207,38 @@ async function eliminarNotificacion(id) {
 }
 
 async function actualizarNotificacion(id) {
+    const rol = localStorage.getItem('rol');
+    if (rol !== 'admin') {
+        return Swal.fire({
+            title: "Acceso denegado",
+            text: "No tienes permiso para actualizar notificaciones.",
+            icon: "error"
+        });
+    }
+
     try {
-        const response = await fetch(`https://proyecto-notificaciones.onrender.com/notificaciones/${id}`, {
+        const response = await fetch(`http://localhost:3000/notificaciones/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({ rol })
         });
 
         if (response.ok) {
             Swal.fire({
                 title: "¡Notificación actualizada!",
                 text: "Los cambios se han guardado correctamente.",
-                icon: "success",
-                draggable: true
+                icon: "success"
             }).then(() => {
-                cargarNotificaciones(); // Recargar la tabla después de actualizar
+                cargarNotificaciones();
             });
         } else {
             const error = await response.json();
             Swal.fire({
                 title: "Error",
                 text: error.error,
-                icon: "error",
-                draggable: true
+                icon: "error"
             });
         }
     } catch (error) {
@@ -214,8 +246,53 @@ async function actualizarNotificacion(id) {
         Swal.fire({
             title: "Error",
             text: "Hubo un problema al actualizar la notificación.",
-            icon: "error",
-            draggable: true
+            icon: "error"
+        });
+    }
+}
+
+async function cambiarSeguimiento(id) {
+    const rol = localStorage.getItem('rol');
+    if (rol !== 'admin') {
+        return Swal.fire({
+            title: "Acceso denegado",
+            text: "No tienes permiso para modificar el seguimiento.",
+            icon: "error"
+        });
+    }
+
+    try {
+        const response = await fetch(`http://localhost:3000/notificaciones/${id}/resuelta`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ rol })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            Swal.fire({
+                title: "Seguimiento actualizado",
+                text: `La notificación se marcó como ${data.resuelta ? 'Resuelta' : 'Pendiente'}.`,
+                icon: "success"
+            }).then(() => {
+                cargarNotificaciones();
+            });
+        } else {
+            const error = await response.json();
+            Swal.fire({
+                title: "Error",
+                text: error.error || "No se pudo actualizar el seguimiento.",
+                icon: "error"
+            });
+        }
+    } catch (error) {
+        console.error('Error al cambiar el seguimiento:', error);
+        Swal.fire({
+            title: "Error",
+            text: "Hubo un problema al cambiar el seguimiento.",
+            icon: "error"
         });
     }
 }

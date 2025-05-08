@@ -5,10 +5,14 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const password = document.getElementById('password').value;
 
     try {
-        const response = await axios.post('https://proyecto-notificaciones.onrender.com/login', { email, password });
+        const response = await axios.post('http://localhost:3000/login', { email, password });
 
-        // Guardar el estado de inicio de sesión en LocalStorage
-        localStorage.setItem('isLoggedIn', 'true'); // Puedes almacenar más datos si es necesario, como el email
+        const { email: userEmail, rol } = response.data;
+
+        // Guardar datos en LocalStorage
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('email', userEmail);
+        localStorage.setItem('rol', rol); // ← Guarda el rol aquí
 
         Swal.fire({
             title: '¡Inicio de sesión exitoso!',
@@ -16,7 +20,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             icon: 'success',
             confirmButtonText: 'Aceptar'
         }).then(() => {
-            window.location.href = 'principal.html';  // Redirigir a la página principal
+            window.location.href = 'principal.html';
         });
 
     } catch (err) {
