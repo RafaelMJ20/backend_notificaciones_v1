@@ -26,7 +26,7 @@ document.getElementById('notificacionForm').addEventListener('submit', async (e)
     });
 
     try {
-        const response = await axios.post('http://localhost:3000/notificaciones', {
+        const response = await axios.post('https://frontend-notificaciones-v1.onrender.com/notificaciones', {
             fecha,
             numero,
             folio,
@@ -72,7 +72,7 @@ let dataTable;
 
 async function cargarNotificaciones() {
     try {
-        const response = await axios.get('http://localhost:3000/notificaciones');
+        const response = await axios.get('https://frontend-notificaciones-v1.onrender.com/notificaciones');
         const rol = localStorage.getItem('rol');
 
         const datosFormateados = response.data.map(notificacion => {
@@ -180,7 +180,7 @@ async function eliminarNotificacion(id) {
 
     if (result.isConfirmed) {
         try {
-            await axios.delete(`http://localhost:3000/notificaciones/${id}`, {
+            await axios.delete(`https://frontend-notificaciones-v1.onrender.com/notificaciones/${id}`, {
                 data: { rol }
             });
 
@@ -217,7 +217,7 @@ async function actualizarNotificacion(id) {
     }
 
     try {
-        const response = await fetch(`http://localhost:3000/notificaciones/${id}`, {
+        const response = await fetch(`https://frontend-notificaciones-v1.onrender.com/notificaciones/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -262,7 +262,7 @@ async function cambiarSeguimiento(id) {
     }
 
     try {
-        const response = await fetch(`http://localhost:3000/notificaciones/${id}/resuelta`, {
+        const response = await fetch(`https://frontend-notificaciones-v1.onrender.com/notificaciones/${id}/resuelta`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
