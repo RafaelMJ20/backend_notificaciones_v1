@@ -415,34 +415,21 @@
 <script>
     function filtrarTabla() {
     const filtroComunidad = document.getElementById("filtroComunidad").value.toUpperCase();
-    const filtroNotificacion = document.getElementById("filtroNotificacion").value.trim();
-
+    const filtroNotificacion = document.getElementById("filtroNotificacion").value.trim().toUpperCase();
+    
+    // Asegúrate de seleccionar TODAS las filas, no solo las visibles
     const filas = document.querySelectorAll("#notificacionesTable tbody tr");
-
+    
     filas.forEach(fila => {
         const comunidad = fila.children[5].textContent.toUpperCase();
-        const notificacion = fila.children[1].textContent.trim();
-
-        let mostrar = true;
-
-        // Verifica si hay algún filtro activo y si coincide
-        if (filtroComunidad && comunidad !== filtroComunidad) {
-            mostrar = false;
-        }
-        if (filtroNotificacion && !notificacion.includes(filtroNotificacion)) {
-            mostrar = false;
-        }
-
-        // Mostrar la fila si al menos un criterio coincide
-        if (
-            (!filtroComunidad || comunidad === filtroComunidad) &&
-            (!filtroNotificacion || notificacion.includes(filtroNotificacion))
-        ) {
-            mostrar = true;
-        }
-
-        fila.style.display = mostrar ? "" : "none";
+        const notificacion = fila.children[1].textContent.toUpperCase();
+        
+        const coincideComunidad = !filtroComunidad || comunidad.includes(filtroComunidad);
+        const coincideNotificacion = !filtroNotificacion || notificacion.includes(filtroNotificacion);
+        
+        fila.style.display = (coincideComunidad && coincideNotificacion) ? "" : "none";
     });
+}
 }
 </script>
 
